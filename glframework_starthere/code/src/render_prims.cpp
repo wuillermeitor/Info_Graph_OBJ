@@ -39,7 +39,7 @@ namespace Cube {
 	extern void setupCube();
 	extern void cleanupCube();
 	extern void updateCube(const glm::mat4& transform);
-	extern void drawCube();
+	extern void drawCube(double currentTime);
 }
 
 void setupPrims() {
@@ -75,5 +75,5 @@ void renderPrims() {
 		ClothMesh::drawClothMesh();
 
 	if (renderCube)
-		Cube::drawCube();
+		Cube::drawCube(0.2);
 }

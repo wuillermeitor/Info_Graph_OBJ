@@ -40,7 +40,7 @@ namespace Cube {
 	void setupCube();
 	void cleanupCube();
 	void updateCube(const glm::mat4& transform);
-	void drawCube();
+	void drawCube(double currentTime);
 }
 
 
@@ -115,9 +115,9 @@ void GLinit(int width, int height) {
 	RV::_projection = glm::perspective(RV::FOV, (float)width/(float)height, RV::zNear, RV::zFar);
 
 	// Setup shaders & geometry
-	/*Box::setupCube();
+	/*Box::setupCube();*/
 	Axis::setupAxis();
-	Cube::setupCube();*/
+	Cube::setupCube();
 
 	bool res = loadOBJ("cube.obj", vertices, uvs, normals);
 
@@ -131,10 +131,9 @@ void GLinit(int width, int height) {
 }
 
 void GLcleanup() {
-	/*Box::cleanupCube();
+	/*Box::cleanupCube();*/
 	Axis::cleanupAxis();
 	Cube::cleanupCube();
-*/
 
 
 }
@@ -150,9 +149,9 @@ void GLrender(double currentTime) {
 	RV::_MVP = RV::_projection * RV::_modelView;
 
 	// render code
-	/*Box::drawCube();
+	/*Box::drawCube();*/
 	Axis::drawAxis();
-	Cube::drawCube();*/
+	Cube::drawCube(currentTime);
 
 
 
@@ -875,12 +874,12 @@ namespace Cube {
 	glm::vec3 verts[] = {
 		glm::vec3(-halfW, -halfW, -halfW),
 		glm::vec3(-halfW, -halfW,  halfW),
-		glm::vec3(halfW, -halfW,  halfW),
-		glm::vec3(halfW, -halfW, -halfW),
+		glm::vec3(halfW,  -halfW,  halfW),
+		glm::vec3(halfW,  -halfW, -halfW),
 		glm::vec3(-halfW,  halfW, -halfW),
 		glm::vec3(-halfW,  halfW,  halfW),
-		glm::vec3(halfW,  halfW,  halfW),
-		glm::vec3(halfW,  halfW, -halfW)
+		glm::vec3(halfW,   halfW,  halfW),
+		glm::vec3(halfW,   halfW, -halfW)
 	};
 	glm::vec3 norms[] = {
 		glm::vec3(0.f, -1.f,  0.f),
@@ -922,14 +921,19 @@ namespace Cube {
 	const char* cube_vertShader =
 	"#version 330\n\
 	in vec3 in_Position;\n\
+	uniform float time;\n\
 	in vec3 in_Normal;\n\
 	out vec4 vert_Normal;\n\
 	uniform mat4 objMat;\n\
 	uniform mat4 mv_Mat;\n\
 	uniform mat4 mvpMat;\n\
+	out float xcolor;\n\
 	void main() {\n\
-		gl_Position = mvpMat * objMat * vec4(in_Position, 1.0);\n\
-		vert_Normal = mv_Mat * objMat * vec4(in_Normal, 0.0);\n\
+		vec3 temp = in_Position;\n\
+		temp.x=temp.x+4*sin(time);\n\
+		gl_Position = mvpMat * vec4(temp, 1.0);\n\
+		xcolor = min(temp.x, 1.0);\n\
+		xcolor = max(xcolor, 0.0);\n\
 	}";
 
 
@@ -939,8 +943,12 @@ in vec4 vert_Normal;\n\
 out vec4 out_Color;\n\
 uniform mat4 mv_Mat;\n\
 uniform vec4 color;\n\
+uniform vec4 ambient;\n\
+in float xcolor;\n\
 void main() {\n\
-	out_Color = vec4(color.xyz * dot(vert_Normal, mv_Mat*vec4(0.0, 1.0, 0.0, 0.0)) + color.xyz * 0.3, 1.0 );\n\
+	vec3 rgb = min(color.rgb*ambient.rgb, vec3(1.0));\n\
+	rgb.r = xcolor;\n\
+	out_Color = vec4(rgb, 1.0); /*vec4(color.xyz * dot(vert_Normal, mv_Mat*vec4(0.0, 1.0, 0.0, 0.0)) + color.xyz * 0.3, 1.0 )*/;\n\
 }";
 	void setupCube() {
 		glGenVertexArrays(1, &cubeVao);
@@ -986,14 +994,16 @@ void main() {\n\
 	void updateCube(const glm::mat4& transform) {
 		objMat = transform;
 	}
-	void drawCube() {
+	void drawCube(double currentTime) {
 		glEnable(GL_PRIMITIVE_RESTART);
 		glBindVertexArray(cubeVao);
 		glUseProgram(cubeProgram);
 		glUniformMatrix4fv(glGetUniformLocation(cubeProgram, "objMat"), 1, GL_FALSE, glm::value_ptr(objMat));
-		glUniformMatrix4fv(glGetUniformLocation(cubeProgram, "mv_Mat"), 1, GL_FALSE, glm::value_ptr(RenderVars::_modelView));
+		//glUniformMatrix4fv(glGetUniformLocation(cubeProgram, "mv_Mat"), 1, GL_FALSE, glm::value_ptr(RenderVars::_modelView));
 		glUniformMatrix4fv(glGetUniformLocation(cubeProgram, "mvpMat"), 1, GL_FALSE, glm::value_ptr(RenderVars::_MVP));
-		glUniform4f(glGetUniformLocation(cubeProgram, "color"), 0.1f, 1.f, 1.f, 0.f);
+		glUniform4f(glGetUniformLocation(cubeProgram, "color"), 1.f, 0.f, 1.f, 0.f);
+		glUniform4f(glGetUniformLocation(cubeProgram, "ambient"),1.f, 1.f, 1.f, 0.f);
+		glUniform1f(glGetUniformLocation(cubeProgram, "time"), (float)currentTime);
 		glDrawElements(GL_TRIANGLE_STRIP, numVerts, GL_UNSIGNED_BYTE, 0);
 	
 		glUseProgram(0);
