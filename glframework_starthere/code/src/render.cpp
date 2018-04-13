@@ -919,36 +919,37 @@ namespace Cube {
 
 	
 	const char* cube_vertShader =
-	"#version 330\n\
-	in vec3 in_Position;\n\
-	uniform float time;\n\
-	in vec3 in_Normal;\n\
-	out vec4 vert_Normal;\n\
-	uniform mat4 objMat;\n\
-	uniform mat4 mv_Mat;\n\
-	uniform mat4 mvpMat;\n\
-	out float xcolor;\n\
-	void main() {\n\
-		vec3 temp = in_Position;\n\
-		temp.x=temp.x+4*sin(time);\n\
-		gl_Position = mvpMat * vec4(temp, 1.0);\n\
-		xcolor = min(gl_Position.x, 1.0);\n\
-		xcolor = max(xcolor, 0.0);\n\
+	"#version 330								\n\
+	in vec3 in_Position;						\n\
+	uniform float time;							\n\
+	in vec3 in_Normal;							\n\
+	out vec4 vert_Normal;						\n\
+	uniform mat4 objMat;						\n\
+	uniform mat4 mv_Mat;						\n\
+	uniform mat4 mvpMat;						\n\
+	out float xcolor;							\n\
+	void main() {								\n\
+		vec3 temp = in_Position;				\n\
+		temp.x=temp.x+4*sin(time);				\n\
+		gl_Position = mvpMat * vec4(temp, 1.0);	\n\
+		xcolor = min(gl_Position.x, 1.0);		\n\
+		xcolor = max(xcolor, 0.0);				\n\
 	}";
 
 
 	const char* cube_fragShader =
-		"#version 330\n\
-		in vec4 vert_Normal;\n\
-		out vec4 out_Color;\n\
-		uniform mat4 mv_Mat;\n\
-		uniform vec4 color;\n\
-		uniform vec4 ambient;\n\
-		in float xcolor;\n\
-		void main() {\n\
-			vec3 rgb = min(color.rgb*ambient.rgb, vec3(1.0));\n\
-			rgb.r = xcolor;\n\
-			out_Color = vec4(rgb, 1.0); /*vec4(color.xyz * dot(vert_Normal, mv_Mat*vec4(0.0, 1.0, 0.0, 0.0)) + color.xyz * 0.3, 1.0 )*/;\n\
+		"#version 330																						\n\
+		in vec4 vert_Normal;																				\n\
+		out vec4 out_Color;																					\n\
+		uniform mat4 mv_Mat;																				\n\
+		uniform vec4 color;																					\n\
+		uniform vec4 ambient;																				\n\
+		in float xcolor;																					\n\
+		void main() {																						\n\
+			vec3 rgb = min(color.rgb*ambient.rgb, vec3(1.0));												\n\
+			rgb.r = xcolor;																					\n\
+			out_Color = vec4(rgb, 1.0);																		\n\
+		/*vec4(color.xyz * dot(vert_Normal, mv_Mat*vec4(0.0, 1.0, 0.0, 0.0)) + color.xyz * 0.3, 1.0 )*/;	\n\
 		}";
 	void setupCube() {
 		glGenVertexArrays(1, &cubeVao);
